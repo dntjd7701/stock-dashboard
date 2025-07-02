@@ -1,7 +1,6 @@
-import StockDashboard from "@/components/StockDashboard";
-import StockDashboard2 from "@/components/StockDashboard2";
+import StockDashboard2 from "@/components/StockDashboard2_lightweight";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  // return <StockDashboard />;
-  return <StockDashboard2 />;
+  redirect("/lightweight");
 }

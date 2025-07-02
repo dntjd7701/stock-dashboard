@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown, Activity, Users, Building, Globe, LucideIcon 
 import { createChart, CandlestickData, LineData, LineSeries, CandlestickSeries } from "lightweight-charts";
 // @ts-ignore
 import { dummyStockData } from "./data.js";
+import Header from "./Header";
 
 // 타입 정의
 interface StockDataItem {
@@ -227,36 +228,7 @@ const StockDashboard = () => {
   return (
     <div className='min-h-screen bg-black text-white'>
       {/* Header */}
-      <header className='bg-gray-900 border-b border-gray-800 px-6 py-4'>
-        <div className='max-w-7xl mx-auto flex items-center justify-between'>
-          <div className='flex items-center space-x-4'>
-            <Activity className='text-red-600 w-8 h-8' />
-            <h1 className='text-2xl font-bold'>StockFlix</h1>
-          </div>
-          <nav className='flex space-x-6'>
-            <a
-              href='#'
-              className='text-gray-300 hover:text-white transition-colors'>
-              대시보드
-            </a>
-            <a
-              href='#'
-              className='text-gray-300 hover:text-white transition-colors'>
-              포트폴리오
-            </a>
-            <a
-              href='#'
-              className='text-gray-300 hover:text-white transition-colors'>
-              뉴스
-            </a>
-            <a
-              href='#'
-              className='text-gray-300 hover:text-white transition-colors'>
-              분석
-            </a>
-          </nav>
-        </div>
-      </header>
+      <Header chartType='lightweight' />
 
       <div className='max-w-7xl mx-auto p-6'>
         {/* 주요 지표 */}
