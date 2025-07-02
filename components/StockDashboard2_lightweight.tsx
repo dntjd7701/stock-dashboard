@@ -40,6 +40,7 @@ interface PeriodButtonProps {
 // 캔들스틱 차트 View (lightweight-charts, addSeries 공식 방식)
 const CandlestickChartView = ({ data }: { data: StockDataItem[] }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -52,8 +53,6 @@ const CandlestickChartView = ({ data }: { data: StockDataItem[] }) => {
       rightPriceScale: { borderColor: "#374151" },
       timeScale: { borderColor: "#374151", timeVisible: true, secondsVisible: false },
     });
-
-    console.debug("chart:", chart);
     const candlestick = chart.addSeries(CandlestickSeries, {
       upColor: "#ef4444",
       downColor: "#10b981",
@@ -62,7 +61,6 @@ const CandlestickChartView = ({ data }: { data: StockDataItem[] }) => {
       wickDownColor: "#9CA3AF",
       wickUpColor: "#9CA3AF",
     });
-
     const chartData: CandlestickData[] = data.map((item) => ({
       time: `${item.date}-01`,
       open: item.open,
@@ -71,6 +69,28 @@ const CandlestickChartView = ({ data }: { data: StockDataItem[] }) => {
       close: item.close,
     }));
     candlestick.setData(chartData);
+
+    chart.subscribeCrosshairMove((param) => {
+      if (!param || !param.time || !param.seriesData) {
+        if (tooltipRef.current) tooltipRef.current.style.display = "none";
+        return;
+      }
+      const priceData = param.seriesData.get(candlestick);
+      if (!priceData || !tooltipRef.current || !param.point) return;
+      tooltipRef.current.style.display = "block";
+      tooltipRef.current.style.left = param.point.x + 10 + "px";
+      tooltipRef.current.style.top = param.point.y + 10 + "px";
+      tooltipRef.current.innerHTML = `
+        <div style="color: #fff; background: rgba(0,0,0,0.7); padding: 6px 10px; border-radius: 8px; font-size: 12px; min-width:120px;">
+          <div><strong>Date:</strong> ${param.time}</div>
+          <div>Open: ${priceData.open}</div>
+          <div>High: ${priceData.high}</div>
+          <div>Low: ${priceData.low}</div>
+          <div>Close: ${priceData.close}</div>
+        </div>
+      `;
+    });
+
     const handleResize = () => {
       if (chartContainerRef.current) {
         chart.applyOptions({ width: chartContainerRef.current.clientWidth });
@@ -85,8 +105,12 @@ const CandlestickChartView = ({ data }: { data: StockDataItem[] }) => {
   return (
     <div
       ref={chartContainerRef}
-      style={{ width: "100%", height: "400px" }}
-    />
+      style={{ width: "100%", height: "400px", position: "relative" }}>
+      <div
+        ref={tooltipRef}
+        style={{ position: "absolute", pointerEvents: "none", display: "none", zIndex: 10 }}
+      />
+    </div>
   );
 };
 
@@ -100,6 +124,7 @@ interface LineChartViewProps {
 }
 const LineChartView = ({ data, color, yFormatter, height = 320 }: LineChartViewProps) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!chartContainerRef.current) return;
     const chart = createChart(chartContainerRef.current, {
@@ -130,6 +155,23 @@ const LineChartView = ({ data, color, yFormatter, height = 320 }: LineChartViewP
         },
       });
     }
+    chart.subscribeCrosshairMove((param) => {
+      if (!param || !param.time || !param.seriesData) {
+        if (tooltipRef.current) tooltipRef.current.style.display = "none";
+        return;
+      }
+      const priceData = param.seriesData.get(line);
+      if (!priceData || !tooltipRef.current || !param.point) return;
+      tooltipRef.current.style.display = "block";
+      tooltipRef.current.style.left = param.point.x + 10 + "px";
+      tooltipRef.current.style.top = param.point.y + 10 + "px";
+      tooltipRef.current.innerHTML = `
+        <div style="color: #fff; background: rgba(0,0,0,0.7); padding: 6px 10px; border-radius: 8px; font-size: 12px; min-width:100px;">
+          <div><strong>Date:</strong> ${param.time}</div>
+          <div>Value: ${priceData.value}</div>
+        </div>
+      `;
+    });
     const handleResize = () => {
       if (chartContainerRef.current) {
         chart.applyOptions({ width: chartContainerRef.current.clientWidth });
@@ -144,8 +186,12 @@ const LineChartView = ({ data, color, yFormatter, height = 320 }: LineChartViewP
   return (
     <div
       ref={chartContainerRef}
-      style={{ width: "100%", height }}
-    />
+      style={{ width: "100%", height, position: "relative" }}>
+      <div
+        ref={tooltipRef}
+        style={{ position: "absolute", pointerEvents: "none", display: "none", zIndex: 10 }}
+      />
+    </div>
   );
 };
 
