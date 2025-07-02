@@ -1,7 +1,5 @@
-import StockDashboard from "@/components/StockDashboard";
 import StockDashboard2 from "@/components/StockDashboard2";
 
 export default function Home() {
-  // return <StockDashboard />;
   return <StockDashboard2 />;
 }
