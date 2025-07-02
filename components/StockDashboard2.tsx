@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { TrendingUp, TrendingDown, Activity, Users, Building, Globe, LucideIcon } from "lucide-react";
-import { createChart, CandlestickData } from "lightweight-charts";
+import { createChart, CandlestickData, LineData, LineSeries, CandlestickSeries } from "lightweight-charts";
 // @ts-ignore
 import { dummyStockData } from "./data.js";
 
@@ -37,14 +36,13 @@ interface PeriodButtonProps {
   onClick: (period: string) => void;
 }
 
-// Lightweight Charts 캔들스틱 차트 컴포넌트 (v5 공식 방식)
-const CandlestickChart = ({ data }: { data: any[] }) => {
+// 캔들스틱 차트 View (lightweight-charts, addSeries 공식 방식)
+const CandlestickChartView = ({ data }: { data: StockDataItem[] }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
-
-    const chart: any = createChart(chartContainerRef.current, {
+    const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
       height: 400,
       layout: { background: { color: "#111827" }, textColor: "#9CA3AF" },
@@ -54,7 +52,8 @@ const CandlestickChart = ({ data }: { data: any[] }) => {
       timeScale: { borderColor: "#374151", timeVisible: true, secondsVisible: false },
     });
 
-    const candlestickSeries = chart.addCandlestickSeries({
+    console.debug("chart:", chart);
+    const candlestick = chart.addSeries(CandlestickSeries, {
       upColor: "#ef4444",
       downColor: "#10b981",
       borderDownColor: "#10b981",
@@ -64,32 +63,87 @@ const CandlestickChart = ({ data }: { data: any[] }) => {
     });
 
     const chartData: CandlestickData[] = data.map((item) => ({
-      time: Math.floor(new Date(item.date).getTime() / 1000), // 👈 초 단위 timestamp
+      time: `${item.date}-01`,
       open: item.open,
       high: item.high,
       low: item.low,
       close: item.close,
     }));
-
-    candlestickSeries.setData(chartData);
-
+    candlestick.setData(chartData);
     const handleResize = () => {
       if (chartContainerRef.current) {
         chart.applyOptions({ width: chartContainerRef.current.clientWidth });
       }
     };
     window.addEventListener("resize", handleResize);
-
     return () => {
       window.removeEventListener("resize", handleResize);
       chart.remove();
     };
   }, [data]);
-
   return (
     <div
       ref={chartContainerRef}
       style={{ width: "100%", height: "400px" }}
+    />
+  );
+};
+
+// 라인차트 View (lightweight-charts, addSeries 공식 방식)
+interface LineChartViewProps {
+  data: { date: string; value: number }[];
+  color: string;
+  yFormatter?: (value: number) => string;
+  height?: number;
+  label?: string;
+}
+const LineChartView = ({ data, color, yFormatter, height = 320 }: LineChartViewProps) => {
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!chartContainerRef.current) return;
+    const chart = createChart(chartContainerRef.current, {
+      width: chartContainerRef.current.clientWidth,
+      height,
+      layout: { background: { color: "#111827" }, textColor: "#9CA3AF" },
+      grid: { vertLines: { color: "#374151" }, horzLines: { color: "#374151" } },
+      crosshair: { mode: 1 },
+      rightPriceScale: { borderColor: "#374151" },
+      timeScale: { borderColor: "#374151", timeVisible: true, secondsVisible: false },
+    });
+    const line = chart.addSeries(LineSeries, {
+      color,
+      lineWidth: 2,
+    });
+    const chartData: LineData[] = data.map((item) => ({
+      time: `${item.date}-01`,
+      value: item.value,
+    }));
+    line.setData(chartData);
+    // y축 포맷터 적용 (lightweight-charts v5는 tickMarkFormatter를 priceFormat에 넣어야 함)
+    if (yFormatter) {
+      line.applyOptions({
+        priceFormat: {
+          type: "custom",
+          minMove: 0.01,
+          formatter: yFormatter,
+        },
+      });
+    }
+    const handleResize = () => {
+      if (chartContainerRef.current) {
+        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      chart.remove();
+    };
+  }, [data, color, yFormatter, height]);
+  return (
+    <div
+      ref={chartContainerRef}
+      style={{ width: "100%", height }}
     />
   );
 };
@@ -248,152 +302,59 @@ const StockDashboard = () => {
 
         {/* 차트 그리드 */}
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-          {/* 주가 차트 */}
+          {/* 주가 차트 (캔들스틱) */}
           <div className='bg-gray-900 rounded-lg p-6 border border-gray-800 lg:col-span-2'>
             <h3 className='text-xl font-semibold mb-4 flex items-center'>
               <Activity className='text-red-600 mr-2' />
               주가 차트 (캔들스틱) - 확대/축소, 드래그 지원
             </h3>
             <div className='h-96'>
-              <CandlestickChart data={stockData} />
+              <CandlestickChartView data={stockData} />
             </div>
           </div>
-
-          {/* 개인 매집 현황 */}
+          {/* 개인 매집 현황 (라인차트) */}
           <div className='bg-gray-900 rounded-lg p-6 border border-gray-800'>
             <h3 className='text-xl font-semibold mb-4 flex items-center'>
               <Users className='text-blue-500 mr-2' />
               개인 보유 현황
             </h3>
             <div className='h-80'>
-              <ResponsiveContainer
-                width='100%'
-                height='100%'>
-                <LineChart data={individualData}>
-                  <CartesianGrid
-                    strokeDasharray='3 3'
-                    stroke='#374151'
-                  />
-                  <XAxis
-                    dataKey='date'
-                    stroke='#9CA3AF'
-                    tick={{ fontSize: 10 }}
-                  />
-                  <YAxis
-                    stroke='#9CA3AF'
-                    tick={{ fontSize: 10 }}
-                    tickFormatter={(value) => `${value}%`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1F2937",
-                      border: "1px solid #374151",
-                      borderRadius: "8px",
-                    }}
-                    formatter={(value) => [`${value}%`, "보유율"]}
-                  />
-                  <Line
-                    type='monotone'
-                    dataKey='percentage'
-                    stroke='#3b82f6'
-                    strokeWidth={2}
-                    dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, fill: "#3b82f6" }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <LineChartView
+                data={individualData.map((d) => ({ date: d.date, value: d.percentage }))}
+                color={"#3b82f6"}
+                yFormatter={(v) => `${v}%`}
+                height={320}
+              />
             </div>
           </div>
-
-          {/* 외국인 매집 현황 */}
+          {/* 외국인 매집 현황 (라인차트) */}
           <div className='bg-gray-900 rounded-lg p-6 border border-gray-800'>
             <h3 className='text-xl font-semibold mb-4 flex items-center'>
               <Globe className='text-green-500 mr-2' />
               외국인 보유 현황
             </h3>
             <div className='h-80'>
-              <ResponsiveContainer
-                width='100%'
-                height='100%'>
-                <LineChart data={foreignData}>
-                  <CartesianGrid
-                    strokeDasharray='3 3'
-                    stroke='#374151'
-                  />
-                  <XAxis
-                    dataKey='date'
-                    stroke='#9CA3AF'
-                    tick={{ fontSize: 10 }}
-                  />
-                  <YAxis
-                    stroke='#9CA3AF'
-                    tick={{ fontSize: 10 }}
-                    tickFormatter={(value) => `${value}%`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1F2937",
-                      border: "1px solid #374151",
-                      borderRadius: "8px",
-                    }}
-                    formatter={(value) => [`${value}%`, "보유율"]}
-                  />
-                  <Line
-                    type='monotone'
-                    dataKey='percentage'
-                    stroke='#10b981'
-                    strokeWidth={2}
-                    dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, fill: "#10b981" }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <LineChartView
+                data={foreignData.map((d) => ({ date: d.date, value: d.percentage }))}
+                color={"#10b981"}
+                yFormatter={(v) => `${v}%`}
+                height={320}
+              />
             </div>
           </div>
-
-          {/* 기관 매집 현황 */}
+          {/* 기관 매집 현황 (라인차트) */}
           <div className='bg-gray-900 rounded-lg p-6 border border-gray-800 lg:col-span-2'>
             <h3 className='text-xl font-semibold mb-4 flex items-center'>
               <Building className='text-purple-500 mr-2' />
               기관 보유 현황
             </h3>
             <div className='h-80'>
-              <ResponsiveContainer
-                width='100%'
-                height='100%'>
-                <LineChart data={institutionalData}>
-                  <CartesianGrid
-                    strokeDasharray='3 3'
-                    stroke='#374151'
-                  />
-                  <XAxis
-                    dataKey='date'
-                    stroke='#9CA3AF'
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis
-                    stroke='#9CA3AF'
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={(value) => `${value}%`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1F2937",
-                      border: "1px solid #374151",
-                      borderRadius: "8px",
-                    }}
-                    formatter={(value) => [`${value}%`, "보유율"]}
-                  />
-                  <Line
-                    type='monotone'
-                    dataKey='percentage'
-                    stroke='#8b5cf6'
-                    strokeWidth={2}
-                    dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, fill: "#8b5cf6" }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <LineChartView
+                data={institutionalData.map((d) => ({ date: d.date, value: d.percentage }))}
+                color={"#8b5cf6"}
+                yFormatter={(v) => `${v}%`}
+                height={320}
+              />
             </div>
           </div>
         </div>
