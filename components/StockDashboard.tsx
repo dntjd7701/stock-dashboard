@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush } from "recharts";
 import { TrendingUp, TrendingDown, Activity, Users, Building, Globe, LucideIcon } from "lucide-react";
 import Header from "./Header";
+import { excelData } from "./excelData";
 
 // 타입 정의
 interface StockDataItem {
@@ -128,6 +129,8 @@ const StockDashboard = () => {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    console.debug("data:", data);
+
     setIsClient(true);
   }, []);
 
@@ -157,7 +160,20 @@ const StockDashboard = () => {
     }
   };
 
-  const stockData = filterDataByPeriod(dummyStockData.주가, selectedPeriod) as StockDataItem[];
+  // const stockData = filterDataByPeriod(dummyStockData.주가, selectedPeriod) as StockDataItem[];
+
+  const data = excelData.map((v) => {
+    return {
+      date: v.tradeDate.replace(/\//g, "-"),
+      price: v.endMount,
+      open: v.endMount,
+      high: v.endMount,
+      low: v.endMount,
+      close: v.endMount,
+    };
+  });
+  const stockData = filterDataByPeriod(data, selectedPeriod) as StockDataItem[];
+
   const individualData = filterDataByPeriod(dummyStockData.개인, selectedPeriod) as ShareholderDataItem[];
   const foreignData = filterDataByPeriod(dummyStockData.외국인, selectedPeriod) as ShareholderDataItem[];
   const institutionalData = filterDataByPeriod(dummyStockData.기관, selectedPeriod) as ShareholderDataItem[];
@@ -272,6 +288,7 @@ const StockDashboard = () => {
                     stroke='#9CA3AF'
                     tick={{ fontSize: 12 }}
                     tickFormatter={(value) => `₩${(value / 1000).toFixed(0)}K`}
+                    domain={["auto", "auto"]}
                   />
                   <Tooltip
                     contentStyle={{
@@ -286,8 +303,15 @@ const StockDashboard = () => {
                     dataKey='price'
                     stroke='#ef4444'
                     strokeWidth={2}
-                    dot={{ fill: "#ef4444", strokeWidth: 2, r: 4 }}
+                    dot={false}
                     activeDot={{ r: 6, fill: "#ef4444" }}
+                  />
+                  <Brush
+                    dataKey='date'
+                    height={30}
+                    stroke='#ef4444'
+                    startIndex={Math.max(0, stockData.length - 60)}
+                    endIndex={stockData.length - 1}
                   />
                 </LineChart>
               </ResponsiveContainer>

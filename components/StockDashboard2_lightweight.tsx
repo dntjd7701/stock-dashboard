@@ -6,6 +6,7 @@ import { createChart, CandlestickData, LineData, LineSeries, CandlestickSeries }
 // @ts-ignore
 import { dummyStockData } from "./data.js";
 import Header from "./Header";
+import { excelData } from "./excelData.js";
 
 // 타입 정의
 interface StockDataItem {
@@ -62,7 +63,8 @@ const CandlestickChartView = ({ data }: { data: StockDataItem[] }) => {
       wickUpColor: "#9CA3AF",
     });
     const chartData: CandlestickData[] = data.map((item) => ({
-      time: `${item.date}-01`,
+      // time: `${item.date}-01`,
+      time: item.date,
       open: item.open,
       high: item.high,
       low: item.low,
@@ -229,7 +231,19 @@ const StockDashboard = () => {
     }
   };
 
-  const stockData = filterDataByPeriod(dummyStockData.주가, selectedPeriod) as StockDataItem[];
+  const data = excelData.map((v) => {
+    return {
+      date: v.tradeDate.replace(/\//g, "-"),
+      price: v.endMount,
+      open: v.endMount - 100,
+      high: v.endMount + 450,
+      low: v.endMount - 500,
+      close: v.endMount,
+    };
+  });
+  const stockData = filterDataByPeriod(data, selectedPeriod) as StockDataItem[];
+
+  // const stockData = filterDataByPeriod(dummyStockData.주가, selectedPeriod) as StockDataItem[];
   const individualData = filterDataByPeriod(dummyStockData.개인, selectedPeriod) as ShareholderDataItem[];
   const foreignData = filterDataByPeriod(dummyStockData.외국인, selectedPeriod) as ShareholderDataItem[];
   const institutionalData = filterDataByPeriod(dummyStockData.기관, selectedPeriod) as ShareholderDataItem[];
