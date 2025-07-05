@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 2025-07-05
 
-## Getting Started
+- 주가(캔들) 차트에서의 표기 방법
 
-First, run the development server:
+캔들 색상은 시가와 종가의 관계에 따라 결정. 녹색은 시가대비 종가가 상승했을 경우, 빨간색은 시가대비 종가가 하락했을 경우 처리된다.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+# echart 공식문서
+
+[echart 공식문서](https://echarts.apache.org/en/option.html#grid.top)
+
+# 사용자 KEY
+
+1. 한국투자증권 개발자 센터의 안내에 따라 APP_KEY, APP_SECRET 저장
+2. 해당 값을 기준으로 token 조회
+
+```ts
+const res = await fetch("https://openapi.koreainvestment.com:9443/oauth2/tokenP", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json; charset=UTF-8",
+  },
+  body: JSON.stringify({
+    grant_type: "client_credentials",
+    appkey: process.env.APP_KEY,
+    appsecret: process.env.APP_SECRET,
+  }),
+});
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# 2025. 06. 16
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+그래프 텍스트 포함 항목
 
-## Learn More
+- 그래프 기준 (시점) 매집수량
+- 분산비율
+- 상관계수 ??
+- 주가선도
+- 종가
 
-To learn more about Next.js, take a look at the following resources:
+바 형태 그래프
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- 거래량
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+선 그래프 x축: 일자 y축: 매집수량
 
-## Deploy on Vercel
+끗!
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+~~액셀 업로드 전에, 종목코드라던지 회사 이름을 쓸 수 있는 ??? 박스가 필요하다 ??~~
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+~~종목명을 나타내는 뭔가가 필요하다. JSON 파일 명칭 때문에 ??~~
+
+props로 종목에 대한 정보는 받는다 가정하고 개발 진행하고,나중에 종목 검색 리스트 따로 만들예정
+
+#### 상관계수, 주가선도 변수명칭 추가
+
+- 상관계수: `stockCorrelation`
+- 주가선도: `stockMomentum`
+
+---
+
+# 2025.06.03
+
+Token 발급 api는 1일 1번 제한하도록 수정이 필요함.
+
+---

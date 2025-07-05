@@ -1,13 +1,13 @@
 "use client";
 
-import React from 'react';
-import { Activity, Users, Building, Globe } from 'lucide-react';
-import Header from '@/components/Header';
-import StatCard from '@/components/ui/StatCard';
-import PeriodButton from '@/components/ui/PeriodButton';
-import LightweightCandlestickChart from '@/components/charts/lightweight/LightweightCandlestickChart';
-import LightweightLineChart from '@/components/charts/lightweight/LightweightLineChart';
-import { useStockData } from '@/components/hooks/useStockData';
+import React from "react";
+import { Activity, Users, Building, Globe } from "lucide-react";
+import Header from "@/components/Header";
+import StatCard from "@/components/ui/StatCard";
+import PeriodButton from "@/components/ui/PeriodButton";
+import LightweightCandlestickChart from "@/components/charts/lightweight/LightweightCandlestickChart";
+import LightweightLineChart from "@/components/charts/lightweight/LightweightLineChart";
+import { useStockData } from "@/components/hooks/useStockData";
 
 /**
  * Lightweight-charts를 사용하여 주식 대시보드를 표시하는 메인 컴포넌트
@@ -15,17 +15,8 @@ import { useStockData } from '@/components/hooks/useStockData';
  * - 주요 지표, 기간 선택 버튼, 차트 그리드를 포함
  */
 const StockDashboardLightweight = () => {
-  const { 
-    isClient,
-    stockData, 
-    individualData, 
-    foreignData, 
-    institutionalData, 
-    selectedPeriod, 
-    setSelectedPeriod, 
-    priceChangePercent, 
-    currentPrice 
-  } = useStockData('1Y');
+  const { isClient, stockData, individualData, foreignData, institutionalData, selectedPeriod, setSelectedPeriod, priceChangePercent, currentPrice } =
+    useStockData("1Y");
 
   // 클라이언트 사이드에서만 렌더링되도록 처리
   if (!isClient) {
@@ -93,9 +84,9 @@ const StockDashboardLightweight = () => {
               <Users className='text-blue-500 mr-2' />
               개인 보유 현황
             </h3>
-            <LightweightLineChart 
-              data={individualData.map(d => ({ date: d.date, value: d.percentage }))} 
-              color="#3b82f6" 
+            <LightweightLineChart
+              data={individualData.map((d) => ({ date: d.date, value: d.percentage }))}
+              color='#3b82f6'
               yFormatter={(v) => `${v.toFixed(2)}%`}
             />
           </div>
@@ -105,9 +96,9 @@ const StockDashboardLightweight = () => {
               <Globe className='text-green-500 mr-2' />
               외국인 보유 현황
             </h3>
-            <LightweightLineChart 
-              data={foreignData.map(d => ({ date: d.date, value: d.percentage }))} 
-              color="#10b981" 
+            <LightweightLineChart
+              data={foreignData.map((d) => ({ date: d.date, value: d.percentage }))}
+              color='#10b981'
               yFormatter={(v) => `${v.toFixed(2)}%`}
             />
           </div>
@@ -117,9 +108,9 @@ const StockDashboardLightweight = () => {
               <Building className='text-purple-500 mr-2' />
               기관 보유 현황
             </h3>
-            <LightweightLineChart 
-              data={institutionalData.map(d => ({ date: d.date, value: d.percentage }))} 
-              color="#8b5cf6" 
+            <LightweightLineChart
+              data={institutionalData.map((d) => ({ date: d.date, value: d.percentage }))}
+              color='#8b5cf6'
               yFormatter={(v) => `${v.toFixed(2)}%`}
             />
           </div>

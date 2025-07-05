@@ -7,6 +7,14 @@ interface Props {
 }
 
 /**
+ * 날짜 형식을 변환하는 함수
+ * 2024/11/05 -> 2024-11-05
+ */
+const formatDate = (dateString: string): string => {
+  return dateString.replace(/\//g, "-");
+};
+
+/**
  * Lightweight-charts를 사용한 캔들스틱 차트 컴포넌트
  * - 실시간으로 데이터 업데이트 및 렌더링
  * - 사용자가 차트를 확대/축소하고 드래그할 수 있음
@@ -18,7 +26,7 @@ const LightweightCandlestickChart: React.FC<Props> = ({ data }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<CandlestickSeries | null>(null);
+  const seriesRef = useRef<any>(null);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -50,8 +58,8 @@ const LightweightCandlestickChart: React.FC<Props> = ({ data }) => {
         if (tooltipRef.current) tooltipRef.current.style.display = "none";
         return;
       }
-      const priceData = param.seriesData.get(seriesRef.current!);
-      if (!priceData) return;
+      const priceData = param.seriesData.get(seriesRef.current!) as CandlestickData;
+      if (!priceData || !priceData.open) return;
 
       tooltipRef.current.style.display = "block";
       tooltipRef.current.style.left = param.point.x + 10 + "px";
@@ -87,7 +95,7 @@ const LightweightCandlestickChart: React.FC<Props> = ({ data }) => {
   useEffect(() => {
     if (seriesRef.current && data) {
       const chartData: CandlestickData[] = data.map((item) => ({
-        time: item.date,
+        time: formatDate(item.date),
         open: item.open,
         high: item.high,
         low: item.low,
